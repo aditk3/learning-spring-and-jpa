@@ -1,5 +1,7 @@
 package com.aditkapoor.hospitalManagement.service;
 
+import com.aditkapoor.hospitalManagement.dto.AppointmentResponseDto;
+import com.aditkapoor.hospitalManagement.dto.CreateAppointmentRequestDto;
 import com.aditkapoor.hospitalManagement.entity.Appointment;
 import com.aditkapoor.hospitalManagement.entity.Doctor;
 import com.aditkapoor.hospitalManagement.entity.Patient;
@@ -9,7 +11,11 @@ import com.aditkapoor.hospitalManagement.repository.PatientRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,9 +24,13 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
+    private final ModelMapper modelMapper;
 
     @Transactional
-    public Appointment createNewAppointment(Appointment appointment, Long doctorId, Long patientId) {
+    public AppointmentResponseDto createNewAppointment(CreateAppointmentRequestDto createAppointmentRequestDto) {
+        Long doctorId = createAppointmentRequestDto.getDoctorId();
+        Long patientId = createAppointmentRequestDto.getPatientId();
+
         Doctor doctor = doctorRepository.findById(doctorId)
                                         .orElseThrow(() -> new EntityNotFoundException(
                                                 "Doctor with ID " + doctorId + " not found!"));
@@ -28,16 +38,19 @@ public class AppointmentService {
                                            .orElseThrow(() -> new EntityNotFoundException(
                                                    "Patient with ID " + patientId + " not found!"));
 
-        if (appointment.getId() != null)
-            throw new IllegalArgumentException("Appointment should not have an ID");
+        Appointment appointment = Appointment.builder()
+                                             .reason(createAppointmentRequestDto.getReason())
+                                             .appointmentTime(createAppointmentRequestDto.getAppointmentTime())
+                                             .build();
 
         appointment.setPatient(patient);
         appointment.setDoctor(doctor);
 
         patient.getAppointments().add(appointment);  // To maintain bidirectional consistency
-        doctor.getAppointments().add(appointment);  // To maintain bidirectional consistency
+//        doctor.getAppointments().add(appointment);  // To maintain bidirectional consistency
 
-        return appointmentRepository.save(appointment);
+        appointment = appointmentRepository.save(appointment);
+        return modelMapper.map(appointment, AppointmentResponseDto.class);
     }
 
     @Transactional
@@ -54,5 +67,16 @@ public class AppointmentService {
         doctor.getAppointments().add(appointment);  // To maintain bidirectional consistency
 
         return appointment;
+    }
+
+    public List<AppointmentResponseDto> getAllAppointmentsOfDoctor(Long doctorId) {
+        Doctor doctor = doctorRepository.findById(doctorId)
+                                        .orElseThrow(() -> new EntityNotFoundException(
+                                                "Doctor with ID " + doctorId + " not found!"));
+
+        return doctor.getAppointments()
+                     .stream()
+                     .map(appointment -> modelMapper.map(appointment, AppointmentResponseDto.class))
+                     .collect(Collectors.toList());
     }
 }

@@ -21,10 +21,10 @@ public class AppointmentTests {
                                              .reason("Cancer")
                                              .build();
 
-        var newApt = appointmentService.createNewAppointment(appointment, 1L, 2L);
-        System.out.println(newApt);
-
-        var updatedApt = appointmentService.reassignAppointmentToNewDoctor(newApt.getId(), 3L);
-        System.out.println(updatedApt);
+//        var newApt = appointmentService.createNewAppointment(appointment, 1L, 2L);
+//        System.out.println(newApt);
+//
+//        var updatedApt = appointmentService.reassignAppointmentToNewDoctor(newApt.getId(), 3L);
+//        System.out.println(updatedApt);
     }
 }

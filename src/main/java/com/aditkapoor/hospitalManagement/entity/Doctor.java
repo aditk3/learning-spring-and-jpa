@@ -14,7 +14,6 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 @Entity
 public class Doctor {
 
@@ -36,10 +35,8 @@ public class Doctor {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "doctor")
-    @ToString.Exclude
     private List<Appointment> appointments = new ArrayList<>();
 
     @ManyToMany(mappedBy = "doctors")
-    @ToString.Exclude
     private Set<Department> departments = new HashSet<>();
 }
